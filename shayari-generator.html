@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shayari Generator — AI Powered</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d14;
+    --surface: #16161f;
+    --card: #1c1c28;
+    --border: rgba(255,255,255,0.08);
+    --accent: #c084fc;
+    --accent2: #818cf8;
+    --gold: #fbbf24;
+    --text: #f1f0ff;
+    --muted: #8b8aa8;
+    --success: #34d399;
+    --error: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+  }
+  .stars {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: radial-gradient(ellipse at 20% 20%, rgba(129,140,248,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, rgba(192,132,252,0.08) 0%, transparent 60%);
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 2rem 1rem 4rem; position: relative; z-index: 1; }
+
+  /* AD BANNER */
+  .ad-top {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* HEADER */
+  .header { text-align: center; margin-bottom: 2rem; }
+  .header .icon { font-size: 48px; margin-bottom: 0.5rem; }
+  .header h1 { font-size: 26px; font-weight: 600; background: linear-gradient(135deg, var(--accent), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .header p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  /* API KEY BOX */
+  .key-box {
+    background: var(--surface);
+    border: 0.5px solid rgba(192,132,252,0.3);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  .key-box label { font-size: 12px; color: var(--accent); display: block; margin-bottom: 8px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
+  .key-row { display: flex; gap: 8px; }
+  .key-row input {
+    flex: 1; padding: 9px 12px;
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: monospace;
+    outline: none;
+  }
+  .key-row input:focus { border-color: var(--accent); }
+  .save-btn {
+    padding: 9px 16px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .key-status { font-size: 12px; margin-top: 6px; color: var(--muted); }
+
+  /* CONTROLS */
+  .card {
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .field label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+  select, input[type=text] {
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Poppins', sans-serif;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  select:focus, input[type=text]:focus { border-color: var(--accent); }
+  select option { background: #1c1c28; }
+
+  .gen-btn {
+    width: 100%;
+    padding: 13px;
+    background: linear-gradient(135deg, #7c3aed, var(--accent), var(--gold));
+    background-size: 200% 200%;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    margin-top: 4px;
+    letter-spacing: 0.3px;
+    animation: shimmer 3s ease infinite;
+  }
+  @keyframes shimmer { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+  .gen-btn:disabled { opacity: 0.5; cursor: not-allowed; animation: none; }
+  .gen-btn:active { transform: scale(0.98); }
+
+  /* SHAYARI OUTPUT */
+  .shayari-box {
+    background: var(--card);
+    border: 0.5px solid rgba(192,132,252,0.2);
+    border-radius: 16px;
+    padding: 1.75rem 1.5rem;
+    margin-bottom: 1rem;
+    min-height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .placeholder-text { color: var(--muted); font-size: 14px; text-align: center; line-height: 1.8; }
+  .shayari-urdu {
+    font-family: 'Noto Nastaliq Urdu', serif;
+    font-size: 20px;
+    line-height: 2.2;
+    text-align: center;
+    color: var(--text);
+    direction: rtl;
+    white-space: pre-line;
+  }
+  .shayari-latin {
+    font-size: 16px;
+    line-height: 2;
+    text-align: center;
+    color: var(--text);
+    white-space: pre-line;
+  }
+  .loading-wrap { text-align: center; }
+  .loading-wrap p { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .dots span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin: 0 3px; animation: bounce 1.2s ease infinite; }
+  .dots span:nth-child(2) { animation-delay: 0.2s; background: var(--accent2); }
+  .dots span:nth-child(3) { animation-delay: 0.4s; background: var(--gold); }
+  @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+
+  .tags { display: flex; justify-content: center; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+  .tag { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: rgba(192,132,252,0.15); color: var(--accent); border: 0.5px solid rgba(192,132,252,0.3); }
+
+  /* ACTION BUTTONS */
+  .actions { display: flex; gap: 8px; margin-bottom: 1rem; }
+  .act { flex: 1; padding: 10px 8px; border: 0.5px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); font-size: 13px; font-family: 'Poppins', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: border-color 0.2s; }
+  .act:hover { border-color: var(--accent); }
+  .act.wa { background: rgba(52,211,153,0.1); color: var(--success); border-color: rgba(52,211,153,0.3); }
+  .copy-msg { text-align: center; font-size: 13px; color: var(--success); padding: 4px; height: 22px; }
+
+  /* AD MID */
+  .ad-mid {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* HISTORY */
+  .hist-title { font-size: 13px; color: var(--muted); font-weight: 500; margin-bottom: 10px; }
+  .hist-item {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 8px;
+    cursor: pointer;
+    text-align: center;
+    white-space: pre-line;
+    line-height: 1.7;
+    transition: border-color 0.2s;
+  }
+  .hist-item:hover { border-color: rgba(192,132,252,0.4); }
+
+  /* FOOTER */
+  .footer { text-align: center; font-size: 12px; color: var(--muted); margin-top: 2rem; padding-top: 1rem; border-top: 0.5px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<div class="wrap">
+
+  <!-- TOP AD -->
+  <div class="ad-top">
+    📢 Advertisement — Google AdSense Banner (728×90)<br>
+    <small>Yahan aapka AdSense ad dikhega</small>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="icon">🌹</div>
+    <h1>Shayari & Status Generator</h1>
+    <p>AI se banaye dil ko chhu lene wali shayariyan</p>
+  </div>
+
+  <!-- API KEY -->
+  <div class="key-box">
+    <label>🔑 Anthropic API Key</label>
+    <div class="key-row">
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
+      <button class="save-btn" onclick="saveKey()">Save</button>
+    </div>
+    <div class="key-status" id="keyStatus">Key abhi save nahi hui</div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="card">
+    <div class="row2">
+      <div class="field">
+        <label>Vishay (Topic)</label>
+        <select id="topic">
+          <option value="mohabbat">💕 Mohabbat / Love</option>
+          <option value="dosti">🤝 Dosti / Friendship</option>
+          <option value="zindagi">🌿 Zindagi / Life</option>
+          <option value="judai">💔 Judai / Separation</option>
+          <option value="khushi">😊 Khushi / Happiness</option>
+          <option value="sad">🌧️ Dard / Sadness</option>
+          <option value="motivational">🔥 Motivation</option>
+          <option value="subah">🌅 Good Morning</option>
+          <option value="raat">🌙 Good Night</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Andaz (Style)</label>
+        <select id="style">
+          <option value="romantic">Romantic</option>
+          <option value="funny">Funny / Hasya</option>
+          <option value="deep">Deep / Gehri</option>
+          <option value="simple">Saral / Simple</option>
+          <option value="classical">Classical Urdu</option>
+        </select>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:12px;">
+      <label>Khaas Words (Optional)</label>
+      <input type="text" id="keywords" placeholder="Jaise: aankhein, sapne, dil, muskaan..." />
+    </div>
+    <button class="gen-btn" id="genBtn" onclick="generateShayari()">✨ Shayari Banao</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="shayari-box" id="shayariBox">
+    <div class="placeholder-text" id="placeholder">
+      🌹 Pehle API key save karo<br>phir topic chunkar shayari banao
+    </div>
+    <div id="loadingEl" style="display:none;" class="loading-wrap">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <p>Shayari likh rahe hain...</p>
+    </div>
+    <div id="shayariContent" style="display:none; width:100%;">
+      <div id="shayariText" class="shayari-latin"></div>
+      <div class="tags" id="tagsEl"></div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions" id="actionBtns" style="display:none;">
+    <button class="act wa" onclick="shareWhatsApp()">📱 WhatsApp</button>
+    <button class="act" onclick="copyText()">📋 Copy</button>
+    <button class="act" onclick="generateShayari()">🔄 Nayi</button>
+  </div>
+  <div class="copy-msg" id="copyMsg"></div>
+
+  <!-- MID AD -->
+  <div class="ad-mid">
+    📢 Advertisement — Google AdSense Rectangle (300×250)<br>
+    <small>Yahan aapka rectangle ad dikhega</small>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="historySection" style="display:none;">
+    <div class="hist-title">🕐 Pichhli Shayariyan</div>
+    <div id="historyGrid"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    Made with ❤️ | Shayari Generator AI<br>
+    <small>© 2026 — Earning ke liye AdSense add karo</small>
+  </div>
+
+</div>
+
+<script>
+let apiKey = '';
+let currentShayari = '';
+const histList = [];
+
+function saveKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  const status = document.getElementById('keyStatus');
+  if (!val.startsWith('sk-ant-')) {
+    status.style.color = '#f87171';
+    status.textContent = '❌ Galat key — "sk-ant-" se shuru honi chahiye';
+    return;
+  }
+  apiKey = val;
+  status.style.color = '#34d399';
+  status.textContent = '✅ Key save ho gayi! Ab shayari generate karo.';
+  document.getElementById('placeholder').innerHTML = '🌹 Topic chunkar "Shayari Banao" dabao';
+}
+
+async function generateShayari() {
+  if (!apiKey) {
+    document.getElementById('keyStatus').style.color = '#f87171';
+    document.getElementById('keyStatus').textContent = '❌ Pehle API key save karo!';
+    return;
+  }
+
+  const topic = document.getElementById('topic').value;
+  const style = document.getElementById('style').value;
+  const keywords = document.getElementById('keywords').value;
+
+  document.getElementById('genBtn').disabled = true;
+  document.getElementById('genBtn').textContent = '...Likh rahe hain';
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('shayariContent').style.display = 'none';
+  document.getElementById('loadingEl').style.display = 'block';
+  document.getElementById('actionBtns').style.display = 'none';
+
+  const topicMap = {
+    mohabbat:'mohabbat aur pyaar',dosti:'dosti aur yaarana',zindagi:'zindagi aur life',
+    judai:'judai aur bichadna',khushi:'khushi aur muskaan',sad:'dard aur gham',
+    motivational:'motivation aur himmat',subah:'subah aur good morning',raat:'raat aur good night'
+  };
+  const styleMap = {
+    romantic:'romantic andaz mein',funny:'funny/hasya andaz mein',deep:'gehri soch wali',
+    simple:'saral aur seedhi bhasha mein',classical:'classical Urdu sher style mein'
+  };
+
+  const kw = keywords ? ` In words ko zaroor shamil karo: ${keywords}.` : '';
+  const prompt = `Ek ${styleMap[style]} Hindi/Urdu shayari likho ${topicMap[topic]} par.${kw}\n\nShayari exactly 4 lines ki honi chahiye. Sirf shayari ki 4 lines likho — koi explanation nahi, koi heading nahi, koi asterisk nahi.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-client': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{role:'user', content: prompt}]
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error?.message || `HTTP ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    currentShayari = data.content[0].text.trim();
+
+    document.getElementById('loadingEl').style.display = 'none';
+    document.getElementById('shayariContent').style.display = 'block';
+    document.getElementById('shayariText').textContent = currentShayari;
+
+    const tl = document.getElementById('topic').options[document.getElementById('topic').selectedIndex].text;
+    const sl = document.getElementById('style').options[document.getElementById('style').selectedIndex].text;
+    document.getElementById('tagsEl').innerHTML = `<span class="tag">${tl}</span><span class="tag">${sl}</span>`;
+    document.getElementById('actionBtns').style.display = 'flex';
+
+    if (histList.length < 5) { histList.unshift(currentShayari); updateHistory(); }
+
+  } catch(e) {
+    document.getElementById('loadingEl').style.display = 'none';
+    document.getElementById('shayariContent').style.display = 'block';
+    document.getElementById('shayariText').style.color = '#f87171';
+    document.getElementById('shayariText').textContent = 'Error: ' + e.message;
+  }
+
+  document.getElementById('genBtn').disabled = false;
+  document.getElementById('genBtn').textContent = '✨ Shayari Banao';
+}
+
+function updateHistory() {
+  const sec = document.getElementById('historySection');
+  const grid = document.getElementById('historyGrid');
+  sec.style.display = 'block';
+  grid.innerHTML = histList.map(s => `<div class="hist-item" onclick="loadHist(this)">${s}</div>`).join('');
+}
+
+function loadHist(el) {
+  currentShayari = el.textContent;
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('loadingEl').style.display = 'none';
+  document.getElementById('shayariContent').style.display = 'block';
+  document.getElementById('shayariText').textContent = currentShayari;
+  document.getElementById('actionBtns').style.display = 'flex';
+}
+
+function shareWhatsApp() {
+  const t = encodeURIComponent(currentShayari + '\n\n🌹 ShayariGenerator.in');
+  window.open('https://wa.me/?text=' + t, '_blank');
+}
+
+function copyText() {
+  navigator.clipboard.writeText(currentShayari).then(() => {
+    const m = document.getElementById('copyMsg');
+    m.textContent = '✅ Shayari copy ho gayi!';
+    setTimeout(() => m.textContent = '', 2000);
+  });
+}
+</script>
+</body>
+</html>
